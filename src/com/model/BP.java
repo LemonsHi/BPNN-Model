@@ -166,7 +166,7 @@ public class BP {
      * 判断是否满足精度条件
      * @return
      */
-    private boolean evaluate() {
+    private boolean evaluate () {
         if (J < epsilon)
             return false;
         else
@@ -197,7 +197,7 @@ public class BP {
      * @param val
      * @return
      */
-    private double sigmoid(double val) {
+    private double sigmoid (double val) {
         return 1.0 / (1.0 + Math.exp(-val));
     }
 }
