@@ -1,0 +1,13 @@
+{
+  "name": "about net config json",
+  "mainConfig": {
+    "BP": {
+      "modelName": "BP",
+      "inputSize": 1,
+      "hiddenSize": 3,
+      "outputSize": 1,
+      "eta": 0.55,
+      "alfa": 0.67
+    }
+  }
+}
