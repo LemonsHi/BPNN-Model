@@ -4,11 +4,6 @@ import com.tools.FileTools;
 import com.tools.JSONTools;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-import java.util.Collections;
-
-import static jdk.nashorn.internal.objects.NativeMath.max;
-
 public class BP {
     private int IM = 1;                                     // 输入层数量 -- 通过 config.json 文件配置输入
     private int RM = 8;                                     // 隐含层数量 -- 通过 config.json 文件配置输入
@@ -29,7 +24,7 @@ public class BP {
     private double Xk[] = new double[OM];                   // 隐层到输出层的计算值
     private double Ek[] = new double[OM];                   //
     private double J = 0.1;                                 // 计算误差
-    private double epsilon = Math.pow(10, -15);                         // 跳出流程阈值
+    private double epsilon = Math.pow(10, -10);             // 跳出流程阈值
 
     public BP () {
         FileTools fileTools = new FileTools("config");
@@ -70,7 +65,7 @@ public class BP {
         for(int j = 0; j < RM; j++) {
             Xj[j] = 0;
             for(int i = 0; i < IM; i++) {
-                Xj[j] += Xi[i] * Win[i][j];
+                Xj[j] = Xj[j] + Xi[i] * Win[i][j];
             }
         }
         // 隐含层 S 激活输出
@@ -82,7 +77,7 @@ public class BP {
         for(int k = 0; k < OM; k++) {
             Xk[k] = 0;
             for(int j = 0; j < RM; j++) {
-                Xk[k] += XjActive[j] * Wout[j][k];
+                Xk[k] = Xk[k] + XjActive[j] * Wout[j][k];
                 Uk[k] = Xk[k];
             }
         }
@@ -119,7 +114,7 @@ public class BP {
             // 阀值为 0
             Xj[j] = 0;
             for (int i = 0; i < IM; i++) {
-                Xj[j] += Xi[i] * Win[i][j];
+                Xj[j] = Xj[j] + Xi[i] * Win[i][j];
             }
         }
         // 隐含层 S 激活输出
@@ -130,17 +125,17 @@ public class BP {
         for (int k = 0; k < OM; k++) {
             Xk[k] = 0;
             for (int j = 0; j < RM; j++) {
-                Xk[k] += XjActive[j] * Wout[j][k];
+                Xk[k] = Xk[k] + XjActive[j] * Wout[j][k];
             }
         }
         // 计算输出与理想输出的偏差
         for(int k = 0; k < OM; k++) {
             Ek[k] = target[k] - Xk[k];
         }
-        J = 0;
+        J = 0d;
         // 采用均方差
         for(int k = 0; k < OM; k++) {
-            J += Ek[k] * Ek[k] / 2.0;
+            J = J + Ek[k] * Ek[k] / 2d;
         }
         // 优化写法
 //        J = 0;
@@ -148,23 +143,6 @@ public class BP {
 //            J += 0.5 * (Math.pow(target[k] - Xk[k], 2));
 //        }
     }
-
-//    /**
-//     * 归一化公式
-//     * @param val
-//     * @return
-//     */
-//    private double normal (double val, int i, boolean type) {
-////        double max, min, value;
-////        if (type) {
-////            max = (double) Collections.max(Arrays.asList(aimInList[i]));
-////            min = (double) Collections.min(Arrays.asList(aimInList[i]));
-////        } else {
-////            max = (double) Collections.max(Arrays.asList(aimTarList[i]));
-////            min = (double) Collections.min(Arrays.asList(aimTarList[i]));
-////        }
-////        return (val - min) / (max - min);
-//    }
 
     /**
      * BP 神经网络反向学习修改连接权值过程
@@ -176,7 +154,8 @@ public class BP {
                 for(int k = 0; k < OM; k++) {
                     dWin[i][j] = dWin[i][j] + learnRate * (Ek[k] * Wout[j][k] * XjActive[j] * (1 - XjActive[j]) * Xi[i]);
                 }
-                Win[i][j] = Win[i][j] + dWin[i][j] + alfa * (oldWin[i][j] - old1Win[i][j]);
+//                Win[i][j] = Win[i][j] + dWin[i][j] + alfa * (oldWin[i][j] - old1Win[i][j]);
+                Win[i][j] = Win[i][j] + dWin[i][j];
                 old1Win[i][j] = oldWin[i][j];
                 oldWin[i][j] = Win[i][j];
             }
@@ -185,7 +164,8 @@ public class BP {
         for(int j = 0; j < RM; j++) {
             for(int k = 0; k < OM; k++) {
                 dWout[j][k] = learnRate * Ek[k] * XjActive[j];
-                Wout[j][k] = Wout[j][k] + dWout[j][k] + alfa * (oldWout[j][k] - old1Wout[j][k]);
+//                Wout[j][k] = Wout[j][k] + dWout[j][k] + alfa * (oldWout[j][k] - old1Wout[j][k]);
+                Wout[j][k] = Wout[j][k] + dWout[j][k];
                 old1Wout[j][k] = oldWout[j][k];
                 oldWout[j][k] = Wout[j][k];
             }
@@ -210,15 +190,15 @@ public class BP {
     public void bpNetinit () {
         for(int i = 0; i < IM; i++) {
             for(int j = 0; j < RM; j++) {
-                Win[i][j] = 0.5 - Math.random();
-//                Win[i][j] = 0;
+//                Win[i][j] = 0.5 - Math.random();
+                Win[i][j] = (0.5 - Math.random()) * 2;
                 Xj[j] = 0;
             }
         }
         for(int j = 0; j < RM; j++) {
             for(int k = 0; k < OM; k++) {
-                Wout[j][k] = 0.5 - Math.random();
-//                Wout[j][k] = 0;
+//                Wout[j][k] = 0.5 - Math.random();
+                Wout[j][k] = (0.5 - Math.random()) * 2;
                 Xk[k] = 0;
             }
         }
@@ -230,6 +210,6 @@ public class BP {
      * @return
      */
     private double sigmoid (double val) {
-        return 1.0 / (1.0 + Math.exp(-val));
+        return 1d / (1d + Math.exp(-val));
     }
 }

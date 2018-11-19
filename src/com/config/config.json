@@ -3,10 +3,10 @@
   "mainConfig": {
     "BP": {
       "modelName": "BP",
-      "inputSize": 2,
-      "hiddenSize": 3,
+      "inputSize": 1,
+      "hiddenSize": 4,
       "outputSize": 1,
-      "eta": 0.55,
+      "eta": 0.1,
       "alfa": 0.67
     }
   }

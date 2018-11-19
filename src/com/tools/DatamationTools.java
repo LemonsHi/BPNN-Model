@@ -7,6 +7,8 @@ public class DatamationTools {
 
     private double[][] input;
 
+    private String inputStr;
+
     private Double[][] aimList;
 
     private double[][] normalList;
@@ -26,12 +28,26 @@ public class DatamationTools {
         }
     }
 
-    private double normal (double val, int i) {
-//        double max, min;
-//        max = (double) Collections.max(Arrays.asList(aimList[i]));
-//        min = (double) Collections.min(Arrays.asList(aimList[i]));
-//        return (val - min) / (max - min);
-        return val / 100;
+//    public void setInputStr () {
+//        for (int i = 0, length = this.input.length; i < length; i++) {
+//
+//        }
+//    }
+
+    public double normal (double val, int i) {
+        double max, min;
+        max = Collections.max(Arrays.asList(aimList[i]));
+        min = Collections.min(Arrays.asList(aimList[i]));
+        return (val - min) / (max - min);
+//        return val / 100.0;
+    }
+
+    public double getReal (double val, int i) {
+        double max, min;
+        max = Collections.max(Arrays.asList(aimList[i]));
+        min = Collections.min(Arrays.asList(aimList[i]));
+        return (val * (max - min) + min);
+//        return val / 100.0;
     }
 
     public double[][] getNormal () {
