@@ -205,6 +205,27 @@ public class BP {
     }
 
     /**
+     * Nguyen-widrow 算法 - 初始化权值
+     * @param in 输入层数
+     * @param out 输出层数
+     * @param w 范围是 [-0.5, 0.5] 之间的权值
+     */
+    private void nguyenwidrow (int in, int out, double[][] w) {
+        double v = 0.7 * Math.pow(out, in);
+        double[] t = new double[w.length];
+        for (int i = 0, length = w.length; i < length; i++) {
+            for (int j = 0, _length_ = w[i].length; j < _length_; j++) {
+                t[i] += Math.pow(w[i][j], 2);
+            }
+        }
+        for (int i = 0, length = w.length; i < length; i++) {
+            for (int j = 0, _length_ = w[i].length; j < _length_; j++) {
+                w[i][j] = v * (w[i][j] / Math.pow(t[i], 0.5));
+            }
+        }
+    }
+
+    /**
      * Sigmoid 函数
      * @param val
      * @return
