@@ -4,9 +4,9 @@
     "BP": {
       "modelName": "BP",
       "inputSize": 1,
-      "hiddenSize": 4,
+      "hiddenSize": 8,
       "outputSize": 1,
-      "eta": 0.1,
+      "eta": 0.55,
       "alfa": 0.67
     }
   }

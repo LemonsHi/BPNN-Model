@@ -70,7 +70,7 @@ public class FileTools {
             String tempString = null;
             while ((tempString = reader.readLine()) != null) {
                 System.out.println("读取数为: " + tempString);
-                data += tempString;
+                data += tempString + '\n';
             }
             reader.close();
         } catch (IOException e) {

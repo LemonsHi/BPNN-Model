@@ -5,6 +5,8 @@ import com.tools.JSONTools;
 import org.json.JSONObject;
 
 public class BP {
+    private int Mount = 1000000;
+    private int mout = 0;
     private int IM = 1;                                     // 输入层数量 -- 通过 config.json 文件配置输入
     private int RM = 8;                                     // 隐含层数量 -- 通过 config.json 文件配置输入
     private int OM = 1;                                     // 输出层数量 -- 通过 config.json 文件配置输入
@@ -24,7 +26,7 @@ public class BP {
     private double Xk[] = new double[OM];                   // 隐层到输出层的计算值
     private double Ek[] = new double[OM];                   //
     private double J = 0.1;                                 // 计算误差
-    private double epsilon = Math.pow(10, -10);             // 跳出流程阈值
+    private double epsilon = Math.pow(10, -17);             // 跳出流程阈值
 
     public BP () {
         FileTools fileTools = new FileTools("config");
@@ -154,8 +156,8 @@ public class BP {
                 for(int k = 0; k < OM; k++) {
                     dWin[i][j] = dWin[i][j] + learnRate * (Ek[k] * Wout[j][k] * XjActive[j] * (1 - XjActive[j]) * Xi[i]);
                 }
-//                Win[i][j] = Win[i][j] + dWin[i][j] + alfa * (oldWin[i][j] - old1Win[i][j]);
-                Win[i][j] = Win[i][j] + dWin[i][j];
+                Win[i][j] = Win[i][j] + dWin[i][j] + alfa * (oldWin[i][j] - old1Win[i][j]);
+//                Win[i][j] = Win[i][j] + dWin[i][j];
                 old1Win[i][j] = oldWin[i][j];
                 oldWin[i][j] = Win[i][j];
             }
@@ -163,8 +165,8 @@ public class BP {
         //隐含到输出权值修正
         for(int j = 0; j < RM; j++) {
             for(int k = 0; k < OM; k++) {
-                dWout[j][k] = learnRate * Ek[k] * XjActive[j];
-//                Wout[j][k] = Wout[j][k] + dWout[j][k] + alfa * (oldWout[j][k] - old1Wout[j][k]);
+//                dWout[j][k] = learnRate * Ek[k] * XjActive[j];
+                Wout[j][k] = Wout[j][k] + dWout[j][k] + alfa * (oldWout[j][k] - old1Wout[j][k]);
                 Wout[j][k] = Wout[j][k] + dWout[j][k];
                 old1Wout[j][k] = oldWout[j][k];
                 oldWout[j][k] = Wout[j][k];
@@ -177,10 +179,23 @@ public class BP {
      * @return
      */
     private boolean evaluate () {
-        if (J < epsilon)
+        if (J < epsilon || mout > Mount) {
+            for (int i = 0; i < IM; i++) {
+                for (int j = 0; j < RM; j++) {
+                    System.out.println("Win: [" + i + ", " + j + "] = " + Win[i][j]);
+                }
+            };
+            for (int k = 0; k < OM; k++) {
+                for (int j = 0; j < RM; j++) {
+                    System.out.println("Wout: [" + j + ", " + k + "] = " + Wout[j][k]);
+                }
+            }
             return false;
-        else
+        }
+        else {
+            mout++;
             return true;
+        }
     }
 
     /**
@@ -190,18 +205,47 @@ public class BP {
     public void bpNetinit () {
         for(int i = 0; i < IM; i++) {
             for(int j = 0; j < RM; j++) {
-//                Win[i][j] = 0.5 - Math.random();
-                Win[i][j] = (0.5 - Math.random()) * 2;
+                Win[i][j] = 0.5 - Math.random();
+//                Win[i][j] = (0.5 - Math.random()) * 2;
                 Xj[j] = 0;
             }
         }
+        nguyenwidrow(IM, RM, Win);
         for(int j = 0; j < RM; j++) {
             for(int k = 0; k < OM; k++) {
-//                Wout[j][k] = 0.5 - Math.random();
-                Wout[j][k] = (0.5 - Math.random()) * 2;
+                Wout[j][k] = 0.5 - Math.random();
+//                Wout[j][k] = (0.5 - Math.random()) * 2;
                 Xk[k] = 0;
             }
         }
+        nguyenwidrow(RM, OM, Wout);
+//        Win[0][0] = 212.71055165310764;
+//        Win[0][1] = -258.83370748971777;
+//        Win[0][2] = -255.9938223882389;
+//        Win[0][3] = -493.48105640945056;
+//        Win[0][4] = -104.61654620639727;
+//        Win[0][5] = 5074.928271606507;
+//
+//        Win[1][0] = 56.42554097891643;
+//        Win[1][1] = -215.0702478897572;
+//        Win[1][2] = -85.97823064774722;
+//        Win[1][3] = 107.5076768990725;
+//        Win[1][4] = -143.07249634721381;
+//        Win[1][5] = 868.1561664643829;
+//
+//        Win[2][0] = 207.60310557355473;
+//        Win[2][1] = -262.94035865852055;
+//        Win[2][2] = -191.98688534711792;
+//        Win[2][3] = -185.53191151378186;
+//        Win[2][4] = -36.96107998815517;
+//        Win[2][5] = 3668.6533394445773;
+//
+//        Wout[0][0] = -2.1212121212160824;
+//        Wout[1][0] = -2.1212121212160824;;
+//        Wout[2][0] = 2.1212121212160824;
+//        Wout[3][0] = 2.1212121212160824;
+//        Wout[4][0] = -2.1212121212160824;
+//        Wout[5][0] = 2.1212121212160824;
     }
 
     /**
@@ -213,13 +257,13 @@ public class BP {
     private void nguyenwidrow (int in, int out, double[][] w) {
         double v = 0.7 * Math.pow(out, in);
         double[] t = new double[w.length];
-        for (int i = 0, length = w.length; i < length; i++) {
-            for (int j = 0, _length_ = w[i].length; j < _length_; j++) {
+        for (int i = 0; i < in; i++) {
+            for (int j = 0; j < out; j++) {
                 t[i] += Math.pow(w[i][j], 2);
             }
         }
-        for (int i = 0, length = w.length; i < length; i++) {
-            for (int j = 0, _length_ = w[i].length; j < _length_; j++) {
+        for (int i = 0; i < in; i++) {
+            for (int j = 0; j < out; j++) {
                 w[i][j] = v * (w[i][j] / Math.pow(t[i], 0.5));
             }
         }
