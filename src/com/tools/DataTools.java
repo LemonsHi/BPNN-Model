@@ -31,7 +31,9 @@ public class DataTools {
             // 生成输入数据集
             dataList[i - 1][0] = Double.valueOf(_data_y[2]);
             dataList[i - 1][1] = Double.valueOf(_data_y[18]);
-            dataList[i - 1][2] = Double.valueOf(_data_y[19]);
+            dataList[i - 1][2] = Math.sin(Double.valueOf(_data_y[19]) / 180 * Math.PI);
+            dataList[i - 1][3] = Math.cos(Double.valueOf(_data_y[19]) / 180 * Math.PI);
+//            System.out.println(Math.sin(dataList[i - 1][2] / 180 * Math.PI));
 
             // 生成目标数据集
             target[i - 1][0] = Double.valueOf(_data_y[17]);

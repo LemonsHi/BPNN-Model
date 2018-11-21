@@ -66,18 +66,15 @@ public class BPNN {
     }
 
     private void RandomWeight(int start, int end, double[][] weight, double[] yuzhi) {
-        for(int n=0;n<end;n++)
-        {
-            for(int m=0;m<start;m++)
-            {
-                weight[m][n] = (Math.random()/32767.0)*2-1;
+        for(int n = 0; n < end ; n++) {
+            for(int m = 0; m < start; m++) {
+                weight[m][n] = (Math.random() / 32767.0) * 2 - 1;
             }
-            yuzhi[n] = (Math.random()/32767.0)*2-1;
+            yuzhi[n] = (Math.random() / 32767.0) * 2 - 1;
         }
     }
 
-    public void train(double[] in, double[] out)
-    {
+    public void train(double[] in, double[] out) {
         this.in = in;
         this.out = out;
         forward();
@@ -89,20 +86,20 @@ public class BPNN {
         forward(inputNum,hiddenNum,w,hidden_y,in,hidden_in,hidden_out);
         forward(hiddenNum,outputNum,v,out_y,hidden_out,out_in,out_out);
         error = 0;
-        for(int k=0;k<outputNum;k++)
-        {
-            //System.out.println("real:"+out[k]+"    test:"+out_out[k]);
+        for(int k = 0; k < outputNum; k++) {
+//            System.out.println("real:" + out[k] + "    test:" + out_out[k]);
         }
 
     }
     private void forward(int start, int end, double[][] weight, double[] yuzhi, double[] setIn,double[] begin, double[] after) {
         //inputNum,hiddenNum,w,hidden_y,in,hidden_in,hidden_out
-        for(int n=0;n<end;n++)
-        {
+        for(int n = 0; n < end; n++) {
             double sum = 0;
-            for(int m=0;m<start;m++)
-                sum += setIn[m]*weight[m][n];
-            begin[n] = sum - yuzhi[n];
+            for(int m = 0; m < start; m++) {
+                sum += setIn[m] * weight[m][n];
+            }
+//            begin[n] = sum - yuzhi[n];
+            begin[n] = sum + yuzhi[n];
             after[n] = Sigmoid(begin[n]);
         }
 
@@ -110,7 +107,7 @@ public class BPNN {
 
     private double Sigmoid(double d) {
         // TODO Auto-generated method stub
-        return 1/(1+Math.exp(-d));
+        return 1 / (1 + Math.exp(-d));
     }
 
     private void Calculate_err() {
@@ -120,21 +117,20 @@ public class BPNN {
     }
     private void Calculate_err_out() {
         sqr_err = 0;
-        for(int k=0;k<outputNum;k++)
-        {
-            delta_out[k] = (out[k]-out_out[k]) * out_out[k] * (1-out_out[k]);
-            sqr_err += (out[k]-out_out[k])*(out[k]-out_out[k]);
+        for(int k = 0; k < outputNum; k++) {
+            delta_out[k] = (out[k] - out_out[k]) * out_out[k] * (1 - out_out[k]);
+            sqr_err += (out[k] - out_out[k]) * (out[k] - out_out[k]);
         }
-        sqr_err = sqr_err/2;
+        sqr_err = sqr_err / 2;
     }
 
     private void Calculate_err_hidden() {
-        for(int n=0;n<hiddenNum;n++)
-        {
+        for(int n = 0; n < hiddenNum; n++) {
             double sum = 0;
-            for(int k=0;k<outputNum;k++)
+            for(int k = 0; k < outputNum; k++) {
                 sum += delta_out[k] * v[n][k];
-            delta_hidden[n] = sum * hidden_out[n] * (1-hidden_out[n]);
+            }
+            delta_hidden[n] = sum * hidden_out[n] * (1 - hidden_out[n]);
         }
     }
 
@@ -144,18 +140,18 @@ public class BPNN {
     }
 
     private void UpData_v() {
-        for(int k=0;k<outputNum;k++)
-        {
-            for(int n=0;n<hiddenNum;n++)
+        for(int k = 0; k < outputNum; k++) {
+            for(int n = 0; n < hiddenNum; n++) {
                 v[n][k] = v[n][k] + rate_w * delta_out[k] * hidden_out[n];
+            }
             out_y[k] = out_y[k] + rate_w * delta_out[k];
         }
     }
     private void UpData_w() {
-        for(int n=0;n<hiddenNum;n++)
-        {
-            for(int m=0;m<inputNum;m++)
+        for(int n = 0; n < hiddenNum; n++) {
+            for(int m = 0; m < inputNum; m++) {
                 w[m][n] = w[m][n] + rate_y * delta_hidden[n] * in[m];
+            }
             hidden_y[n] = hidden_y[n] + rate_y * delta_hidden[n];
         }
     }
