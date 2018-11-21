@@ -25,7 +25,7 @@ public class Start {
 //        DatamationTools inputMation = new DatamationTools(input);
 //        DatamationTools targetMation = new DatamationTools(target);
 
-        FileTools fileTools = new FileTools("public-train");
+        FileTools fileTools = new FileTools("sample");
         String data = fileTools.readFile();
         DataTools dataTools = new DataTools(4, 1, data);
 
@@ -40,13 +40,13 @@ public class Start {
         double[][] inputD = inputMation.getNormal();
         double[][] outD = targetMation.getNormal();
 
-        BPNN bp = new BPNN(4,1,1,0.99,0.99);
+        BPNN bp = new BPNN(4,2,1,0.1,0.1);
         int p = 0;
         double error = 100;
 //        p < 30000000
-        while(true && error > 0.011) {
+        while(p < 30000000 && error > 0.011) {
             error = 0;
-            for (int i = 0; i < 9000; i++) {
+            for (int i = 0; i < 19; i++) {
                 double[] in = inputD[i];
                 double[] out = outD[i];
                 bp.train(in, out);
@@ -59,7 +59,7 @@ public class Start {
         double[] yName = new double[target.length];
         double[] real = new double[target.length];
         double[] out = new double[target.length];
-        for (int i = 0; i < 9000; i++) {
+        for (int i = 0; i < 19; i++) {
             yName[i] = i;
             real[i] = target[i][0];
             out[i] = targetMation.getReal(bp.test(inputD[i])[0], 0);
