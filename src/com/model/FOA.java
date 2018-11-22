@@ -6,103 +6,202 @@ public class FOA {
     private int maxgen;
     private double LR;
     private double FR;
+    private int DIM;
+    private int TYPE;
 
-    private double[] x;
-    private double[] y;
-    private double[] d;
-    private double[] s;
+    // BP 神经网络，输入层、隐含层、输出层，层数
+    private int inputNum;
+    private int hiddenNum;
+    private int outputNum;
+    private double[] input;
+    private double[] out;
 
     private double[] smell;
 
-    private double x_axis;
-    private double y_axis;
-    private int preBestIndex;
-    private double preBestSmell;
-    private double nowBestSmell;
+    double[][] Di;
+    double[][] Si;
+    double[][] X;
+    double[][] Y;
+    private double[] x_axis;
+    private double[] y_axis;
 
-    public FOA(int popsize, int maxgen, double LR, double FR) {
+    private double[] smell_best;
+
+    private double[] x_best;
+    private double[] y_best;
+    private int index;
+    private double bestSmell;
+    private double smellBest;
+
+    public FOA(int popsize, int maxgen, double LR, double FR, int DIM) {
         this.popsize = popsize;
         this.maxgen = maxgen;
         this.LR = LR;
         this.FR = FR;
+        this.DIM = DIM;
+        x_best = new double[DIM];
+        y_best = new double[DIM];
+        smell_best = new double[maxgen];
+        init();
+    }
+
+    // FOA-BP 结合算法入口
+
+
+    public FOA(int popsize, int maxgen, double LR, double FR, int TYPE, int inputNum, int hiddenNum, int outputNum, double[] input, double[] out) {
+        this.popsize = popsize;
+        this.maxgen = maxgen;
+        this.LR = LR;
+        this.FR = FR;
+        this.TYPE = TYPE;
+        this.inputNum = inputNum;
+        this.hiddenNum = hiddenNum;
+        this.outputNum = outputNum;
+        this.input = input;
+        this.out = out;
+        this.DIM = inputNum * hiddenNum + hiddenNum * outputNum + hiddenNum + outputNum;
+        this.TYPE = 1;
+
+        x_best = new double[DIM];
+        y_best = new double[DIM];
+        smell_best = new double[maxgen];
         init();
     }
 
     private void init () {
-        x_axis = LR * Math.random();
-        y_axis = LR * Math.random();
-        x     = new double[popsize];
-        y     = new double[popsize];
-        d     = new double[popsize];
-        s     = new double[popsize];
-        smell = new double[popsize];
+        Di = new double[popsize][DIM];
+        Si = new double[popsize][DIM];
+        X = new double[popsize][DIM];
+        Y = new double[popsize][DIM];
+
+        x_axis = new double[DIM];
+        y_axis = new double[DIM];
+
+        for (int i = 0; i < DIM; i++) {
+            x_axis[i] = FR * Math.random();
+            y_axis[i] = FR * Math.random();
+        }
 
         move();
+        switch (TYPE) {
+            case 1:
+                bp(Si);
+                break;
+            default:
+                Fitness(Si);
+        }
         min();
         change();
     }
 
     private void move () {
         for (int i = 0; i < popsize; i++) {
-            x[i] = x_axis + FR * Math.random();
-            y[i] = y_axis + FR * Math.random();
-            double x_y = Math.pow(x[i], 2) + Math.pow(y[i], 2);
-            d[i] = Math.pow(x_y, 0.5);
-            s[i] = 1.0 / d[i];
-            smell[i] = Fitness(s[i]);
+            for (int j = 0; j < DIM; j++) {
+                X[i][j] = x_axis[j] + LR * Math.random();
+                Y[i][j] = y_axis[j] + LR * Math.random();
+                double Di_x = Math.pow(X[i][j], 2);
+                double Di_y = Math.pow(Y[i][j], 2);
+                Di[i][j] = Math.pow((Di_x + Di_y), 0.5);
+                Si[i][j] = 1.0 / Di[i][j];
+            }
         }
     }
 
     private void min () {
-        preBestSmell = smell[0];
-        preBestIndex = 0;
+        index = 0;
+        bestSmell = smell[0];
         for (int i = 1; i < popsize; i++) {
-            if (preBestSmell > smell[i]) {
-                preBestSmell = smell[i];
-                preBestIndex = i;
+            if (bestSmell > smell[i]) {
+                index = i;
+                bestSmell = smell[i];
             }
         }
     }
 
     private void change () {
-        x_axis = x[preBestIndex];
-        y_axis = y[preBestIndex];
-        nowBestSmell = preBestSmell;
+        x_axis = X[index];
+        y_axis = Y[index];
+        smellBest = bestSmell;
     }
 
     private boolean isEnd () {
-        return nowBestSmell > preBestSmell ? true : false;
+        return smellBest > bestSmell ? true : false;
     }
 
     public void beginMove () {
         for (int i = 0; i < maxgen; i++) {
             move();
+            Fitness(Si);
             min();
             if (isEnd()) {
                 change();
             }
+            smell_best[i] = smellBest;
+            x_best = x_axis;
+            y_best = y_axis;
         }
     }
 
-    private double Fitness (double s) {
-        return Math.pow(s, 2);
+    private void Fitness (double[][] s) {
+        smell = new double[popsize];
+        for (int i = 0; i < popsize; i++) {
+            double sum = 0;
+            for (int j = 0; j < DIM; j++) {
+                sum += Math.pow(s[i][j], 2) * j;
+            }
+            smell[i] = sum;
+        }
     }
 
-    public double getX_axis() {
-        return x_axis;
+    private void bp (double[][] s) {
+        smell = new double[popsize];
+        double[] hidden_out = new double[hiddenNum];
+        double[] out_out = new double[outputNum];
+        for (int i = 0; i < popsize; i++) {
+            double err = 0.0;
+            for (int j = 0; j < hiddenNum; j++) {
+                double sum = 0.0;
+                for (int k = j, n = 0; k < (inputNum * hiddenNum); k = k + hiddenNum, n++) {
+                    sum += s[i][k] * input[n];
+                }
+                hidden_out[j] = Sigmoid(sum + s[i][inputNum * hiddenNum + j]);
+            }
+            for (int j = 0; j < outputNum; j++) {
+                double sum = 0.0;
+                for (int k = (inputNum * hiddenNum + hiddenNum + outputNum), n = 0; k < DIM; k = k + outputNum, n++) {
+                    sum += s[i][k] * hidden_out[n];
+                }
+                out_out[j] = Sigmoid(sum + s[i][inputNum * hiddenNum + hiddenNum + j]);
+                err += (out[j] - out_out[j]) * (out[j] - out_out[j]);
+            }
+            err = err / 2;
+            smell[i] = err;
+        }
     }
 
-    public double getY_axis() {
-        return y_axis;
+    private double Sigmoid(double d) {
+        // TODO Auto-generated method stub
+        return 1 / (1 + Math.exp(-d));
     }
 
-    public double getNowBestSmell() {
-        return nowBestSmell;
+    public double[] getSmell_best() {
+        return smell_best;
+    }
+
+    public double[] getX_best() {
+        return x_best;
+    }
+
+    public double[] getY_best() {
+        return y_best;
     }
 
     public static void main(String[] args) {
-        FOA foa = new FOA(50, 200, 10, 2);
-        foa.beginMove();
-        System.out.println(foa.getNowBestSmell());
+//        FOA foa = new FOA(50, 100, 10, 2, 30);
+//        foa.beginMove();
+//        double[] best = foa.getSmell_best();
+//        for (int i = 0; i < best.length; i++) {
+//            System.out.println(best[i]);
+//        }
     }
 }

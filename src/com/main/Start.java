@@ -1,8 +1,7 @@
 package com.main;
 
 import com.charts.JFreeCharts;
-import com.model.BP;
-import com.model.BPNN;
+import com.model.FOABPNN;
 import com.tools.DataTools;
 import com.tools.DatamationTools;
 import com.tools.FileTools;
@@ -15,38 +14,39 @@ import java.io.IOException;
 public class Start {
     public static void main(String[] args) throws IOException {
 
-//        double[][] input = new double[200][1];
-//        double[][] target = new double[200][1];
-//
-//        for (int i = 0; i < 200; i++) {
-//            input[i][0] = i;
-//            target[i][0] = i * i;
-//        }
-//        DatamationTools inputMation = new DatamationTools(input);
-//        DatamationTools targetMation = new DatamationTools(target);
+        double[][] input = new double[200][1];
+        double[][] target = new double[200][1];
 
-        FileTools fileTools = new FileTools("sample");
-        String data = fileTools.readFile();
-        DataTools dataTools = new DataTools(4, 1, data);
-
-        double[][] input = dataTools.getDataList();
-        double[][] target = dataTools.getTarget();
-
-        System.out.println("input 一共有 " + input.length + " 行; " + input[0].length + " 列");
-        System.out.println("target 一共有 " + target.length + " 行; " + target[0].length + " 列");
-
+        for (int i = -100, n = 0; i < 100; i++, n++) {
+            input[n][0] = i;
+            target[n][0] = i * i;
+        }
         DatamationTools inputMation = new DatamationTools(input);
         DatamationTools targetMation = new DatamationTools(target);
+
+//        FileTools fileTools = new FileTools("sample");
+//        String data = fileTools.readFile();
+//        DataTools dataTools = new DataTools(4, 1, data);
+//
+//        double[][] input = dataTools.getDataList();
+//        double[][] target = dataTools.getTarget();
+//
+//        System.out.println("input 一共有 " + input.length + " 行; " + input[0].length + " 列");
+//        System.out.println("target 一共有 " + target.length + " 行; " + target[0].length + " 列");
+//
+//        DatamationTools inputMation = new DatamationTools(input);
+//        DatamationTools targetMation = new DatamationTools(target);
         double[][] inputD = inputMation.getNormal();
         double[][] outD = targetMation.getNormal();
 
-        BPNN bp = new BPNN(4,2,1,0.1,0.1);
+        // 0 传统 BP 模型；1 FOA-BP 模型
+        FOABPNN bp = new FOABPNN(1,8,1,0.5,0.5, 0);
         int p = 0;
         double error = 100;
 //        p < 30000000
-        while(p < 30000000 && error > 0.011) {
+        while(error >= 0.011) {
             error = 0;
-            for (int i = 0; i < 19; i++) {
+            for (int i = 0; i < target.length; i++) {
                 double[] in = inputD[i];
                 double[] out = outD[i];
                 bp.train(in, out);
@@ -59,11 +59,16 @@ public class Start {
         double[] yName = new double[target.length];
         double[] real = new double[target.length];
         double[] out = new double[target.length];
-        for (int i = 0; i < 19; i++) {
-            yName[i] = i;
-            real[i] = target[i][0];
-            out[i] = targetMation.getReal(bp.test(inputD[i])[0], 0);
+        for (int i = -(target.length / 2), n = 0; i < (target.length / 2); i++, n++) {
+            yName[n] = i;
+            real[n] = target[n][0];
+            out[n] = targetMation.getReal(bp.test(inputD[n])[0], 0);
         }
+//        for (int i = 0, n = 0; i < target.length; i++, n++) {
+//            yName[n] = i;
+//            real[n] = target[n][0];
+//            out[n] = targetMation.getReal(bp.test(inputD[n])[0], 0);
+//        }
 
         /**
          * 生成图表过程
