@@ -1,15 +1,13 @@
 package com.model;
 
-import com.charts.JFreeCharts;
-
-import javax.swing.*;
-
-public class FOA {
+public class IFOA {
 
     private int popsize;
     private int maxgen;
     private double LR;
     private double FR;
+    private double WINIT;
+    private double WINITB;
     private int DIM;
     private int TYPE;
 
@@ -26,6 +24,8 @@ public class FOA {
     double[][] Si;
     double[][] X;
     double[][] Y;
+    double[][] Vx;
+    double[][] Vy;
     private double[] x_axis;
     private double[] y_axis;
 
@@ -37,12 +37,15 @@ public class FOA {
     private double bestSmell;
     private double smellBest;
 
-    public FOA (int popsize, int maxgen, double LR, double FR, int DIM) {
+    public IFOA (int popsize, int maxgen, double LR, double FR, double WINIT, double WINITB, int DIM, int TYPE) {
         this.popsize = popsize;
         this.maxgen = maxgen;
         this.LR = LR;
         this.FR = FR;
+        this.WINIT = WINIT;
+        this.WINITB = WINITB;
         this.DIM = DIM;
+        this.TYPE = TYPE;
         x_best = new double[DIM];
         y_best = new double[DIM];
         smell_best = new double[maxgen];
@@ -50,9 +53,7 @@ public class FOA {
     }
 
     // FOA-BP 结合算法入口
-
-
-    public FOA (int popsize, int maxgen, double LR, double FR, int TYPE, int inputNum, int hiddenNum, int outputNum, double[] input, double[] out) {
+    public IFOA (int popsize, int maxgen, double LR, double FR, int TYPE, int inputNum, int hiddenNum, int outputNum, double[] input, double[] out) {
         this.popsize = popsize;
         this.maxgen = maxgen;
         this.LR = LR;
@@ -75,18 +76,37 @@ public class FOA {
     private void init () {
         Di = new double[popsize][DIM];
         Si = new double[popsize][DIM];
-        X = new double[popsize][DIM];
-        Y = new double[popsize][DIM];
+        X  = new double[popsize][DIM];
+        Y  = new double[popsize][DIM];
+        Vx = new double[popsize][DIM];
+        Vy = new double[popsize][DIM];
 
         x_axis = new double[DIM];
         y_axis = new double[DIM];
 
+        // 基于混沌映射中的 Logistic 方程来确定初始值位置
+        // λ * Hi * (1 - Hi) -- λ = [0, 4]  Hi = [0, 1]
         for (int i = 0; i < DIM; i++) {
-            x_axis[i] = FR * Math.random();
-            y_axis[i] = FR * Math.random();
+            double Hi_x = Math.random();
+            double Hi_y = Math.random();
+            x_axis[i] = 4 * Hi_x * (1 - Hi_x);
+            y_axis[i] = 4 * Hi_y * (1 - Hi_y);
         }
 
-        move();
+        for (int i = 0; i < popsize; i++) {
+            for (int j = 0; j < DIM; j++) {
+                // 使用 LGMS 给出果蝇个体的随机方向和距离
+                Vx[i][j] = LR * Math.random() * WINIT * Math.pow(WINITB, j);
+                Vy[i][j] = LR * Math.random() * WINIT * Math.pow(WINITB, j);
+                X[i][j] = x_axis[j] + Vx[i][j];
+                Y[i][j] = y_axis[j] + Vy[i][j];
+                double Di_x = Math.pow(X[i][j], 2);
+                double Di_y = Math.pow(Y[i][j], 2);
+                Di[i][j] = Math.pow((Di_x + Di_y), 0.5);
+                Si[i][j] = 1.0 / Di[i][j];
+            }
+        }
+
         switch (TYPE) {
             case 1:
                 bp(Si);
@@ -98,17 +118,43 @@ public class FOA {
         change();
     }
 
-    private void move () {
+    private double WW (int gen) {
+        double ww_min = 0.3, ww_max = 0.9;
+        return ww_min - ((ww_min - ww_max) / maxgen) * gen;
+    }
+
+    private void move (int gen) {
+        // 粒子群算法 PSO 位置移动方式
+        double C1 = 2, C2 = 2;
         for (int i = 0; i < popsize; i++) {
             for (int j = 0; j < DIM; j++) {
-                X[i][j] = x_axis[j] + LR * Math.random();
-                Y[i][j] = y_axis[j] + LR * Math.random();
+                Vx[i][j] = WW(gen) * Vx[i][j] + C1 * Math.random() * (X[gBestIndex()][j] - X[i][j]) + C2 * Math.random() * (x_axis[j] - X[i][j]);
+                Vy[i][j] = WW(gen) * Vy[i][j] + C1 * Math.random() * (Y[gBestIndex()][j] - Y[i][j]) + C2 * Math.random() * (y_axis[j] - Y[i][j]);
+                X[i][j] = X[i][j] + Vx[i][j];
+                Y[i][j] = Y[i][j] + Vy[i][j];
                 double Di_x = Math.pow(X[i][j], 2);
                 double Di_y = Math.pow(Y[i][j], 2);
                 Di[i][j] = Math.pow((Di_x + Di_y), 0.5);
                 Si[i][j] = 1.0 / Di[i][j];
             }
         }
+    }
+
+    private int gBestIndex () {
+        int index = 0;
+        for (int i = 0, length = smell.length; i < length - 1; i++) {
+            boolean flag = true;
+            for (int j = 0; j < length - 1 - i; j++) {
+                if (smell[j] < smell[j + 1]) {
+                    index = j;
+                    flag = false;
+                }
+            }
+            if (flag) {
+                break;
+            }
+        }
+        return index;
     }
 
     private void min () {
@@ -134,14 +180,8 @@ public class FOA {
 
     public void beginMove () {
         for (int i = 0; i < maxgen; i++) {
-            move();
-            switch (TYPE) {
-                case 1:
-                    bp(Si);
-                    break;
-                default:
-                    Fitness(Si);
-            }
+            move(i);
+            Fitness(Si);
             min();
             if (isEnd()) {
                 change();
@@ -207,38 +247,11 @@ public class FOA {
     }
 
     public static void main(String[] args) {
-        FOA foa = new FOA(50, 200, 10, 2, 30);
+        IFOA foa = new IFOA(50, 200, 10, 2, 1, 0.95, 30, 0);
         foa.beginMove();
         double[] best = foa.getSmell_best();
         for (int i = 0; i < best.length; i++) {
             System.out.println(best[i]);
         }
-
-        IFOA ifoa = new IFOA(50, 200, 10, 2, 1, 0.95, 30, 0);
-        ifoa.beginMove();
-        double[] ibest = ifoa.getSmell_best();
-        for (int i = 0; i < ibest.length; i++) {
-            System.out.println(ibest[i]);
-        }
-
-        double[] real = new double[200];
-        double[] out = new  double[200];
-        double[] yName = new double[200];
-        for (int i = 0; i < 200; i++) {
-            real[i] = best[i];
-            out[i] = ibest[i];
-            yName[i] = i;
-        }
-        /**
-         * 生成图表过程
-         */
-        SwingUtilities.invokeLater(() -> {
-            JFreeCharts example = new JFreeCharts("Line Chart Example", real, out, yName);
-            example.setAlwaysOnTop(true);
-            example.pack();
-            example.setSize(600, 400);
-            example.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-            example.setVisible(true);
-        });
     }
 }

@@ -4,41 +4,45 @@ import javax.swing.text.MaskFormatter;
 
 public class FOABPNN {
 
-    //样本输入输出in&out
+    // 样本输入输出in&out
     private double[] in;
     private double[] out;
-    //隐藏层输入输出hidden_in*hidden_out
+    // 隐藏层输入输出hidden_in*hidden_out
     private double[] hidden_in;
     private double[] hidden_out;
-    //输出层输入与输出out_in&out_out;
+    // 输出层输入与输出out_in&out_out;
     private double[] out_in;
     private double[] out_out;
-    //各节点之间的权值w[i-h]&v[h-o]
+    // 各节点之间的权值w[i-h]&v[h-o]
     private double[][] w;
     private double[][] v;
-    //隐藏层和输出层的阈值hidden_y,out_y
+    // 隐藏层和输出层的阈值hidden_y,out_y
     private double[] hidden_y;
     private double[] out_y;
-    //输入层隐藏层输出层节点数inputNum&hiddenNum&outputNum
+    // 输入层隐藏层输出层节点数inputNum&hiddenNum&outputNum
     private int inputNum;
     private int hiddenNum;
     private int outputNum;
-    //隐藏层输出层的一般误差
+    // 隐藏层输出层的一般误差
     private double[] delta_hidden;
     private double[] delta_out;
-    //总误差error
+    // 总误差error
     public double error;
-    //用于执行速率
+    // 用于执行速率
     private double rate_w;
     private double rate_y;
     public double sqr_err;
-
-    //
+    // 0: 传统 BP 模型; 1: FOA-BP 模型
     private int TYPE;
+    // FOA 参数
+    private int popSize;
+    private int maxGen;
+    private double LR;
+    private double FR;
 
 
     public FOABPNN(int inputNum, int hiddenNum, int outputNum, double rate_w,
-                double rate_y, int TYPE) {
+                double rate_y, int popSize, int maxGen, double LR, double FR,int TYPE) {
         super();
         this.inputNum = inputNum;
         this.hiddenNum = hiddenNum;
@@ -57,6 +61,10 @@ public class FOABPNN {
         out_y = new double[outputNum+1];
         delta_hidden = new double[hiddenNum];
         delta_out = new double[outputNum];
+        this.popSize = popSize;
+        this.maxGen = maxGen;
+        this.LR = LR;
+        this.FR = FR;
         this.TYPE = TYPE;
         RandomWeight();
     }
@@ -65,7 +73,7 @@ public class FOABPNN {
         switch (TYPE) {
             case 1:
                 System.out.println("FOA-BP");
-                FOA foa = new FOA(20, 100, 10.0, 2.0, 1, inputNum, hiddenNum, outputNum, in, out);
+                FOA foa = new FOA(popSize, maxGen, LR, FR, 1, inputNum, hiddenNum, outputNum, in, out);
                 foa.beginMove();
                 RandomWeight(foa.getX_best(), foa.getY_best());
                 break;

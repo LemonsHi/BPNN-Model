@@ -40,11 +40,13 @@ public class Start {
         double[][] outD = targetMation.getNormal();
 
         // 0 传统 BP 模型；1 FOA-BP 模型
-        FOABPNN bp = new FOABPNN(1,8,1,0.5,0.5, 0);
+        FOABPNN bp = new FOABPNN(1, 8, 1, 0.5, 0.5,
+                20, 100, 10, 2, 0);
         int p = 0;
         double error = 100;
 //        p < 30000000
-        while(error >= 0.011) {
+//        error >= 0.011
+        while (p < 30000000) {
             error = 0;
             for (int i = 0; i < target.length; i++) {
                 double[] in = inputD[i];
