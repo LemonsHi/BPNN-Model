@@ -87,10 +87,12 @@ public class IFOA {
         // 基于混沌映射中的 Logistic 方程来确定初始值位置
         // λ * Hi * (1 - Hi) -- λ = [0, 4]  Hi = [0, 1]
         for (int i = 0; i < DIM; i++) {
-            double Hi_x = Math.random();
-            double Hi_y = Math.random();
-            x_axis[i] = 4 * Hi_x * (1 - Hi_x);
-            y_axis[i] = 4 * Hi_y * (1 - Hi_y);
+//            double Hi_x = Math.random();
+//            double Hi_y = Math.random();
+//            x_axis[i] = 4 * Hi_x * (1 - Hi_x);
+//            y_axis[i] = 4 * Hi_y * (1 - Hi_y);
+            x_axis[i] = FR * Math.random();
+            y_axis[i] = FR * Math.random();
         }
 
         for (int i = 0; i < popsize; i++) {
@@ -247,7 +249,7 @@ public class IFOA {
     }
 
     public static void main(String[] args) {
-        IFOA foa = new IFOA(50, 200, 10, 2, 1, 0.95, 30, 0);
+        IFOA foa = new IFOA(50, 200, 10, 2, 1, 0.95, 20, 0);
         foa.beginMove();
         double[] best = foa.getSmell_best();
         for (int i = 0; i < best.length; i++) {
