@@ -10,25 +10,24 @@ public class Logistic {
     // 初始位置 x[维度] - x_axis || y_axis
     private double[] x;
 
-    // Logistic 映射后的种群 out_x[种群数量][维度] - X[种群数量][维度] || Y[种群数量][维度]
-    private double[][] out_x;
+    // Logistic 映射后的种群 out_x[维度] - x_axis[维度] || y_axis[维度]
+    private double[] out_x;
 
     // x ∈ [min, max]
     private double max;
     private double min;
 
-    // 种群数量
-    private int SIZE;
     // 个体维度
     private int DIM;
 
-    // 混沌变量 Cx[种群数量][维度]
-    private double[][] Cx;
+    // 混沌变量 Cx[维度]
+    private double[] Cx;
 
-    public Logistic(double[] x, int SIZE, int DIM) {
+    public Logistic(double[] x, int DIM) {
         this.x = x;
-        this.SIZE = SIZE;
         this.DIM = DIM;
+        this.Cx = new double[DIM];
+        this.out_x = new double[DIM];
 
         begin();
     }
@@ -54,22 +53,15 @@ public class Logistic {
     }
 
     private void setCx () {
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < DIM; j++) {
-                if (i == 0) {
-                    Cx[i][j] = (x[j] - min) / (max - min);
-                } else {
-                    Cx[i][j] = 4.0 * Cx[i - 1][j] * (1 - Cx[i - 1][j]);
-                }
-            }
+        Cx[0] = (x[0] - min) / (max - min);
+        for (int i = 1; i < DIM; i++) {
+             Cx[i] = 4.0 * Cx[i - 1] * (1 - Cx[i - 1]);
         }
     }
 
     private void setOut_x () {
-        for (int i = 0; i < SIZE; i++) {
-            for (int j = 0; j < DIM; j++) {
-                out_x[i][j] = min + Cx[i][j] * (max - min);
-            }
+        for (int i = 0; i < DIM; i++) {
+            out_x[i] = min + Cx[i] * (max - min);
         }
     }
 
@@ -80,20 +72,19 @@ public class Logistic {
         setOut_x();
     }
 
-    public double[][] getOut_x() {
+    public double[] getOut_x() {
         return out_x;
     }
 
     public static void main(String[] args) {
         int DIM = 30;
-        int SIZE = 300;
         double[] x_axis = new double[30];
         double[] y_axis = new double[30];
         for (int i = 0; i < DIM; i++) {
             x_axis[i] = Math.random();
             y_axis[i] = Math.random();
         }
-        Logistic logistic_x = new Logistic(x_axis, SIZE, DIM);
-        Logistic logistic_y = new Logistic(y_axis, SIZE, DIM);
+//        Logistic logistic_x = new Logistic(x_axis, SIZE, DIM);
+//        Logistic logistic_y = new Logistic(y_axis, SIZE, DIM);
     }
 }

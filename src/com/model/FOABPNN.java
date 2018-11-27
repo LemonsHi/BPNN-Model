@@ -72,10 +72,10 @@ public class FOABPNN {
     private void RandomWeight() {
         switch (TYPE) {
             case 1:
-                System.out.println("FOA-BP");
-                FOA foa = new FOA(popSize, maxGen, LR, FR, 1, inputNum, hiddenNum, outputNum, in, out);
-                foa.beginMove();
-                RandomWeight(foa.getX_best(), foa.getY_best());
+//                System.out.println("FOA-BP");
+//                FOA foa = new FOA(popSize, maxGen, LR, FR, 1, inputNum, hiddenNum, outputNum, in, out);
+//                foa.beginMove();
+//                RandomWeight(foa.getX_best(), foa.getY_best());
                 break;
             default:
                 System.out.println("BP");
