@@ -10,8 +10,8 @@ public class Logistic {
     // 初始位置 x[维度] - x_axis || y_axis
     private double[] x;
 
-    // Logistic 映射后的种群 out_x[维度] - x_axis[维度] || y_axis[维度]
-    private double[] out_x;
+    // Logistic 映射后的种群 out_x[种群数][维度] - X[维度] || Y[维度]
+    private double[][] out_x;
 
     // x ∈ [min, max]
     private double max;
@@ -19,15 +19,17 @@ public class Logistic {
 
     // 个体维度
     private int DIM;
+    private int SIZE;
 
-    // 混沌变量 Cx[维度]
-    private double[] Cx;
+    // 混沌变量 Cx[种群数][维度]
+    private double[][] Cx;
 
-    public Logistic(double[] x, int DIM) {
+    public Logistic(double[] x, int SIZE, int DIM) {
         this.x = x;
+        this.SIZE = SIZE;
         this.DIM = DIM;
-        this.Cx = new double[DIM];
-        this.out_x = new double[DIM];
+        this.Cx = new double[SIZE][DIM];
+        this.out_x = new double[SIZE][DIM];
 
         begin();
     }
@@ -53,15 +55,22 @@ public class Logistic {
     }
 
     private void setCx () {
-        Cx[0] = (x[0] - min) / (max - min);
-        for (int i = 1; i < DIM; i++) {
-             Cx[i] = 4.0 * Cx[i - 1] * (1 - Cx[i - 1]);
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < DIM; j++) {
+                if (i == 0) {
+                    Cx[0][j] = (x[0] - min) / (max - min);
+                } else {
+                    Cx[i][j] = 4.0 * Cx[i - 1][j] * (1 - Cx[i - 1][j]);
+                }
+            }
         }
     }
 
     private void setOut_x () {
-        for (int i = 0; i < DIM; i++) {
-            out_x[i] = min + Cx[i] * (max - min);
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < DIM; j++) {
+                out_x[i][j] = min + Cx[i][j] * (max - min);
+            }
         }
     }
 
@@ -72,7 +81,7 @@ public class Logistic {
         setOut_x();
     }
 
-    public double[] getOut_x() {
+    public double[][] getOut_x() {
         return out_x;
     }
 

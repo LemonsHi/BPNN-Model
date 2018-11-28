@@ -1,244 +1,180 @@
-//package com.model;
-//
-//import com.charts.JFreeCharts;
-//
-//import javax.swing.*;
-//
-//public class FOA {
-//
-//    private int popsize;
-//    private int maxgen;
-//    private double LR;
-//    private double FR;
-//    private int DIM;
-//    private int TYPE;
-//
-//    // BP 神经网络，输入层、隐含层、输出层，层数
-//    private int inputNum;
-//    private int hiddenNum;
-//    private int outputNum;
-//    private double[] input;
-//    private double[] out;
-//
-//    private double[] smell;
-//
-//    double[][] Di;
-//    double[][] Si;
-//    double[][] X;
-//    double[][] Y;
-//    private double[] x_axis;
-//    private double[] y_axis;
-//
-//    private double[] smell_best;
-//
-//    private double[] x_best;
-//    private double[] y_best;
-//    private int index;
-//    private double bestSmell;
-//    private double smellBest;
-//
-//    public FOA (int popsize, int maxgen, double LR, double FR, int DIM) {
-//        this.popsize = popsize;
-//        this.maxgen = maxgen;
-//        this.LR = LR;
-//        this.FR = FR;
-//        this.DIM = DIM;
-//        x_best = new double[DIM];
-//        y_best = new double[DIM];
-//        smell_best = new double[maxgen];
-//        init();
-//    }
-//
-//    // FOA-BP 结合算法入口
-//
-//
-//    public FOA (int popsize, int maxgen, double LR, double FR, int TYPE, int inputNum, int hiddenNum, int outputNum, double[] input, double[] out) {
-//        this.popsize = popsize;
-//        this.maxgen = maxgen;
-//        this.LR = LR;
-//        this.FR = FR;
-//        this.TYPE = TYPE;
-//        this.inputNum = inputNum;
-//        this.hiddenNum = hiddenNum;
-//        this.outputNum = outputNum;
-//        this.input = input;
-//        this.out = out;
-//        this.DIM = inputNum * hiddenNum + hiddenNum * outputNum + hiddenNum + outputNum;
-//        this.TYPE = 1;
-//
-//        x_best = new double[DIM];
-//        y_best = new double[DIM];
-//        smell_best = new double[maxgen];
-//        init();
-//    }
-//
-//    private void init () {
-//        Di = new double[popsize][DIM];
-//        Si = new double[popsize][DIM];
-//        X = new double[popsize][DIM];
-//        Y = new double[popsize][DIM];
-//
-//        x_axis = new double[DIM];
-//        y_axis = new double[DIM];
-//
-//        for (int i = 0; i < DIM; i++) {
-//            x_axis[i] = FR * Math.random();
-//            y_axis[i] = FR * Math.random();
-//        }
-//
-//        move();
-//        switch (TYPE) {
-//            case 1:
-//                bp(Si);
-//                break;
-//            default:
-//                Fitness(Si);
-//        }
-//        min();
-//        change();
-//    }
-//
-//    private void move () {
-//        for (int i = 0; i < popsize; i++) {
-//            for (int j = 0; j < DIM; j++) {
-//                X[i][j] = x_axis[j] + LR * Math.random();
-//                Y[i][j] = y_axis[j] + LR * Math.random();
-//                double Di_x = Math.pow(X[i][j], 2);
-//                double Di_y = Math.pow(Y[i][j], 2);
-//                Di[i][j] = Math.pow((Di_x + Di_y), 0.5);
-//                Si[i][j] = 1.0 / Di[i][j];
-//            }
-//        }
-//    }
-//
-//    private void min () {
-//        index = 0;
-//        bestSmell = smell[0];
-//        for (int i = 1; i < popsize; i++) {
-//            if (bestSmell > smell[i]) {
-//                index = i;
-//                bestSmell = smell[i];
-//            }
-//        }
-//    }
-//
-//    private void change () {
-//        x_axis = X[index];
-//        y_axis = Y[index];
-//        smellBest = bestSmell;
-//    }
-//
-//    private boolean isEnd () {
-//        return smellBest > bestSmell ? true : false;
-//    }
-//
-//    public void beginMove () {
-//        for (int i = 0; i < maxgen; i++) {
-//            move();
-//            switch (TYPE) {
-//                case 1:
-//                    bp(Si);
-//                    break;
-//                default:
-//                    Fitness(Si);
-//            }
-//            min();
-//            if (isEnd()) {
-//                change();
-//            }
+package com.model;
+
+import com.tools.FileTools;
+
+public class FOA {
+
+    private int popsize;
+    private int maxgen;
+    private int DIM;
+    private double w;
+    private double a;
+    private double LR;
+    private double FR;
+
+    private double[] smell;
+    private double[] x_axis;
+    private double[] y_axis;
+
+    private double[][] Dist;
+    double[][] Si;
+    double[][] X;
+    double[][] Y;
+
+    private double[] smell_best;
+
+    private double[] x_best;
+    private double[] y_best;
+    private int index;
+    private double bestSmell;
+    private double smellBest;
+
+    public FOA(int popsize, int maxgen, int DIM, double w, double a, double LR, double FR) {
+        this.popsize = popsize;
+        this.maxgen = maxgen;
+        this.DIM = DIM;
+        this.w = w;
+        this.a = a;
+        this.LR = LR;
+        this.FR = FR;
+        this.smell_best = new double[maxgen];
+
+        this.x_axis = new double[DIM];
+        this.y_axis = new double[DIM];
+        this.Dist = new double[popsize][DIM];
+        this.Si = new double[popsize][DIM];
+        this.X = new double[popsize][DIM];
+        this.Y = new double[popsize][DIM];
+
+        init();
+    }
+
+    // 初始化个体最佳位置位置
+    private void init () {
+        for (int i = 0; i < DIM; i++) {
+            x_axis[i] = FR * Math.random();
+            y_axis[i] = FR * Math.random();
+        }
+        // 使用 Logistic 映射，初始化种群 X[种群数][维度] || Y[种群数][维度]
+//        Logistic logistic_x = new Logistic(x_axis, popsize, DIM);
+//        X = logistic_x.getOut_x();
+//        Logistic logistic_y = new Logistic(y_axis, popsize, DIM);
+//        Y = logistic_y.getOut_x();
+
+//        setDist();
+        move(0);
+        Fitness(Si);
+        min();
+        change();
+    }
+
+    // 种群移动
+    private void move (int gan) {
+        for (int i = 0; i < popsize; i++) {
+            for (int j = 0; j < DIM; j++) {
+                // 给每个果蝇赋予飞行距离与方向
+                X[i][j] = x_axis[j] + (LR - 2 * Math.random() * LR);
+                Y[i][j] = y_axis[j] + (LR - 2 * Math.random() * LR);
+                // Dist 位置及 Si 味道浓度判定值计算
+                Dist[i][j] = Math.pow(X[i][j] * X[i][j] + Y[i][j] * Y[i][j], 0.5);
+                Si[i][j] = 1.0 / Dist[i][j];
+            }
+        }
+    }
+
+    private void setDist () {
+        for (int i = 0; i < popsize; i++) {
+            for (int j = 0; j < DIM; j++) {
+                // Dist 位置及 Si 味道浓度判定值计算
+                Dist[i][j] = Math.pow(X[i][j] * X[i][j] + Y[i][j] * Y[i][j], 0.5);
+                Si[i][j] = 1.0 / Dist[i][j];
+            }
+        }
+    }
+
+    // 浓度判断函数
+    private void Fitness (double[][] s) {
+        smell = new double[popsize];
+        for (int i = 0; i < popsize; i++) {
+            double sum = 0;
+            for (int j = 0; j < DIM; j++) {
+//                sum += s[i][j] * s[i][j];
+                sum += s[i][j] * s[i][j] - 10 * Math.cos(2 * Math.PI * s[i][j]) + 10;
+            }
+            // 每个个体味道浓度
+            smell[i] = sum;
+        }
+    }
+
+    // 最佳味道浓度值的果蝇
+    private void min () {
+        index = 0;
+        bestSmell = smell[0];
+        for (int i = 1; i < popsize; i++) {
+            if (bestSmell > smell[i]) {
+                index = i;
+                bestSmell = smell[i];
+            }
+        }
+    }
+
+    // 视觉搜索过程
+    private void change () {
+        x_axis = X[index];
+        y_axis = Y[index];
+        smellBest = bestSmell;
+        System.out.println("当前最佳味道：" + smellBest);
+    }
+
+    private boolean isEnd () {
+        return smellBest > bestSmell ? true : false;
+    }
+
+    private double getW (int gan) {
+        return w * Math.pow(a, gan);
+    }
+
+    public void begin () {
+        for (int i = 1; i < maxgen; i++) {
+            move(i);
+            Fitness(Si);
+            min();
+            if (isEnd()) {
+                change();
+            }
 //            smell_best[i] = smellBest;
-//            x_best = x_axis;
-//            y_best = y_axis;
-//        }
-//    }
-//
-//    private void Fitness (double[][] s) {
-//        smell = new double[popsize];
-//        for (int i = 0; i < popsize; i++) {
-//            double sum = 0;
-//            for (int j = 0; j < DIM; j++) {
-//                sum += Math.pow(s[i][j], 2) * j;
-//            }
-//            smell[i] = sum;
-//        }
-//    }
-//
-//    private void bp (double[][] s) {
-//        smell = new double[popsize];
-//        double[] hidden_out = new double[hiddenNum];
-//        double[] out_out = new double[outputNum];
-//        for (int i = 0; i < popsize; i++) {
-//            double err = 0.0;
-//            for (int j = 0; j < hiddenNum; j++) {
-//                double sum = 0.0;
-//                for (int k = j, n = 0; k < (inputNum * hiddenNum); k = k + hiddenNum, n++) {
-//                    sum += s[i][k] * input[n];
-//                }
-//                hidden_out[j] = Sigmoid(sum + s[i][inputNum * hiddenNum + j]);
-//            }
-//            for (int j = 0; j < outputNum; j++) {
-//                double sum = 0.0;
-//                for (int k = (inputNum * hiddenNum + hiddenNum + outputNum), n = 0; k < DIM; k = k + outputNum, n++) {
-//                    sum += s[i][k] * hidden_out[n];
-//                }
-//                out_out[j] = Sigmoid(sum + s[i][inputNum * hiddenNum + hiddenNum + j]);
-//                err += (out[j] - out_out[j]) * (out[j] - out_out[j]);
-//            }
-//            err = err / 2;
-//            smell[i] = err;
-//        }
-//    }
-//
-//    private double Sigmoid(double d) {
-//        // TODO Auto-generated method stub
-//        return 1 / (1 + Math.exp(-d));
-//    }
-//
-//    public double[] getSmell_best() {
-//        return smell_best;
-//    }
-//
-//    public double[] getX_best() {
-//        return x_best;
-//    }
-//
-//    public double[] getY_best() {
-//        return y_best;
-//    }
-//
-//    public static void main(String[] args) {
-//        FOA foa = new FOA(50, 200, 10, 2, 30);
-//        foa.beginMove();
-//        double[] best = foa.getSmell_best();
-//        for (int i = 0; i < best.length; i++) {
-//            System.out.println(best[i]);
-//        }
-//
-//        IFOA ifoa = new IFOA(50, 200, 10, 2, 1, 0.95, 30, 0);
-//        ifoa.beginMove();
-//        double[] ibest = ifoa.getSmell_best();
-//        for (int i = 0; i < ibest.length; i++) {
-//            System.out.println(ibest[i]);
-//        }
-//
-//        double[] real = new double[200];
-//        double[] out = new  double[200];
-//        double[] yName = new double[200];
-//        for (int i = 0; i < 200; i++) {
-//            real[i] = best[i];
-//            out[i] = ibest[i];
-//            yName[i] = i;
-//        }
-//        /**
-//         * 生成图表过程
-//         */
-//        SwingUtilities.invokeLater(() -> {
-//            JFreeCharts example = new JFreeCharts("Line Chart Example", real, out, yName);
-//            example.setAlwaysOnTop(true);
-//            example.pack();
-//            example.setSize(600, 400);
-//            example.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-//            example.setVisible(true);
-//        });
-//    }
-//}
+            x_best = x_axis;
+            y_best = y_axis;
+        }
+    }
+
+    public double[] getX_best() {
+        return x_best;
+    }
+
+    public double getSmellBest() {
+        return smellBest;
+    }
+
+    public double[][] getSi() {
+        return Si;
+    }
+
+    public static void main(String[] args) {
+        FOA cifoa = new FOA(100, 3000, 50, 1, 0.5, 100, 1);
+        cifoa.begin();
+        double[][] Si = cifoa.getSi();
+        String str="";
+        for (int i = 0; i < Si.length; i++) {
+            str += String.valueOf(i + 1) + ' ';
+            for (int j = 0; j < Si[i].length; j++) {
+
+                str += String.valueOf(Si[i][j]) + ' ';
+            }
+            str += '\n';
+        }
+        FileTools fileTools = new FileTools("FOA-Si");
+        fileTools.writeFile(str);
+        System.out.println(Math.sqrt(4.0));
+    }
+}
